@@ -47,11 +47,15 @@ const average = (arr) =>
 
           if(data.Response === 'False') throw new Error("Movie not Found")
 
-          setMovies(data.Search)
+          setMovies(data.Search);
+          setError("");
         }
         catch(err){
-          console.log(err.message);
-          setError(err.message);
+          console.error(err.message);
+
+          if(err.name !== "AbortError"){
+            setError(err.message);
+          }
         }
         finally{
           setIsLoading(false);
@@ -64,6 +68,7 @@ const average = (arr) =>
         return
       } 
 
+      handleCloseMovie();
       fetchMovies();
 
       return function(){
@@ -226,7 +231,7 @@ function MovieDetails({selectedId,onCloseMovie,onAddWatchedMovie,watched}){
     Director: director,
     Genre: genre
   } = movie;
-  console.log(isWatched)
+
   function handleAdd(){
     const newWatchedMovie = {
       imdbID: selectedId,
@@ -241,6 +246,22 @@ function MovieDetails({selectedId,onCloseMovie,onAddWatchedMovie,watched}){
     onAddWatchedMovie(newWatchedMovie);
     onCloseMovie();
   }
+
+  useEffect(()=>{
+    function callback(e){
+      if(e.code === "Escape"){
+        onCloseMovie();
+        // console.log("close")
+      }
+    }
+
+    document.addEventListener("keydown",callback)
+
+    return function(){
+      document.removeEventListener("keydown",callback);
+    };
+
+  },[onCloseMovie]);
 
   useEffect(function(){
     async function getMovieDetails(){
